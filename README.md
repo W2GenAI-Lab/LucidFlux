@@ -202,6 +202,57 @@ python demo_gradio.py
     <td width="200"><b>DreamClear</b></td>
     <td width="200"><b>Ours</b></td>
 </tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/040.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/013.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/041.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/143.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/160.jpg" width="1000"></td></tr>
+</table>
+
+<details>
+<summary>Show more examples</summary>
+
+<table>
+<tr align="center"><td colspan="5"><img src="images/gallery/019.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/006.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/079.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/082.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/111.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/123.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/135.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/137.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/144.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/151.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/166.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/182.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/183.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/202.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/207.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/208.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/214.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/222.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/224.jpg" width="1000"></td></tr>
+<tr align="center"><td colspan="5"><img src="images/gallery/231.jpg" width="1000"></td></tr>
+</table>
+
+</details>
+</div>
+
+<!-- 
+## 🎭 Gallery & Examples
+
+<div align="center">
+
+### 🎨 LucidFlux Gallery
+
+<table>
+<tr align="center">
+    <td width="200"><b>LQ</b></td>
+    <td width="200"><b>SeeSR</b></td>
+    <td width="200"><b>SUPIR</b></td>
+    <td width="200"><b>DreamClear</b></td>
+    <td width="200"><b>Ours</b></td>
+</tr>
 <tr align="center"><td colspan="5"><img src="images/gallery/006.jpg" width="1000"></td></tr>
 <tr align="center"><td colspan="5"><img src="images/gallery/013.jpg" width="1000"></td></tr>
 <tr align="center"><td colspan="5"><img src="images/gallery/019.jpg" width="1000"></td></tr>
@@ -227,7 +278,7 @@ python demo_gradio.py
 <tr align="center"><td colspan="5"><img src="images/gallery/231.jpg" width="1000"></td></tr>
 </table>
 
-</div>
+</div> -->
 
 ---
 
