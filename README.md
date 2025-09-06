@@ -7,7 +7,7 @@
 [![Website](https://img.shields.io/badge/🌐-Website-green)](https://github.com/W2GenAI-Lab/LucidFlux)
 [![HF Demo](https://img.shields.io/badge/🤗-HF_Demo-orange)](https://github.com/W2GenAI-Lab/LucidFlux)
 
-<img src="images/logo/logo2.png" alt="LucidFlux Logo" width="1000"/>
+<!-- <img src="images/logo/logo2.png" alt="LucidFlux Logo" width="1000"/> -->
 
 ### [**🌐 Website**](https://github.com/W2GenAI-Lab/LucidFlux) | [**🎯 Demo**](https://github.com/W2GenAI-Lab/LucidFlux) | [**📄 Paper**](https://github.com/W2GenAI-Lab/LucidFlux) | [**🤗 Models**](https://github.com/W2GenAI-Lab/LucidFlux) | [**🤗 HF Demo**](https://github.com/W2GenAI-Lab/LucidFlux)
 
