@@ -444,11 +444,11 @@ Finially ```bash inference.sh```. You can also obtain the results of LucidFlux o
 
 ## 🪪 License
 
-The provided code and pre-trained weights are licensed under the [FLUX.1 [dev]](LICENSE).
+The provided code and pre-trained weights are licensed under the [FLUX.1 \[dev\](LICENSE).
 
 ## 🙏 Acknowledgments
 
-- This code is based on [FLUX](https://github.com/black-forest-labs/flux). Some code are brought from [DreamClear](https://github.com/shallowdream204/DreamClear). We thank the authors for their awesome work.
+- This code is based on [FLUX](https://github.com/black-forest-labs/flux). Some code are brought from [DreamClear](https://github.com/shallowdream204/DreamClear), [x-flux](https://github.com/XLabs-AI/x-flux). We thank the authors for their awesome work.
 
 - 🏛️ Thanks to our affiliated institutions for their support.
 - 🤝 Special thanks to the open-source community for inspiration.
