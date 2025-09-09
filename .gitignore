@@ -14,3 +14,10 @@ results-reallq250/
 cat_image.py
 run_cc.sh
 CLAUDE.md
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
