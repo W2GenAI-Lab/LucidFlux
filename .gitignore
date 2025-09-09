@@ -5,8 +5,11 @@ lq_256/
 output/
 seesr/
 supir/
+sinsr/
 .claude/
 cat.sh
+test.py
+results-reallq250/
 cat_image.py
 run_cc.sh
 CLAUDE.md
