@@ -4,6 +4,7 @@ dreamclear/
 lq_256/
 output/
 seesr/
+**__pycache__/
 supir/
 sinsr/
 .claude/
