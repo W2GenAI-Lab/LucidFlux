@@ -15,7 +15,9 @@
 </div>
 
 ---
+![abs_image](https://github.com/user-attachments/assets/06628a46-e043-437d-9dac-f9e0ada36c9b)
 
+---
 ## News & Updates
 
 
