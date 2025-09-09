@@ -318,7 +318,7 @@ python demo_gradio.py
 
 </details>
 </div>
-More detailed results can refer to our website page [**🌐 Website**](https://w2genai-lab.github.io/LucidFlux/)
+**🌐 Explore more on our [Website](https://w2genai-lab.github.io/LucidFlux/)**
 <!-- 
 ## 🎭 Gallery & Examples
 
@@ -454,6 +454,17 @@ For any questions or inquiries, please reach out to us:
 
 - **Song Fei**: `sfei285@connect.hkust-gz.edu.cn`
 - **Tian Ye**: `tye610@connect.hkust-gz.edu.cn`
+
+## 🧑‍🤝‍🧑 WeChat Group
+<details>
+  <summary>点击展开二维码（WeChat Group QR Code）</summary>
+
+  <br>
+
+  <img src="https://github.com/user-attachments/assets/047faa4e-da63-415c-97a0-8dbe8045a839"
+       alt="WeChat Group QR"
+       width="320">
+</details>
 
 
 </div>
