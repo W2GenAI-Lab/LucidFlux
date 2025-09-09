@@ -444,7 +444,7 @@ Finially ```bash inference.sh```. You can also obtain the results of LucidFlux o
 
 ## 🪪 License
 
-The provided code and pre-trained weights are licensed under the [FLUX.1 \[dev\](LICENSE).
+The provided code and pre-trained weights are licensed under the [FLUX.1 \[dev\]](LICENSE).
 
 ## 🙏 Acknowledgments
 
