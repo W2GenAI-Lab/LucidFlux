@@ -440,7 +440,7 @@ python inference.py \
   --width 1024 --height 1024 --num_steps 50 \
 ```
 
-Finially ```bash inference.sh```.
+Finially ```bash inference.sh```. You can also obtain the results of LucidFlux on RealSR and RealLQ250 from Hugging Face: [**LucidFlux**](https://huggingface.co/W2GenAI/LucidFlux).
 
 
 ## 🙏 Acknowledgments
