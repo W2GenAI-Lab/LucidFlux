@@ -15,7 +15,7 @@
 </div>
 
 ---
-![abs_image](https://github.com/user-attachments/assets/06628a46-e043-437d-9dac-f9e0ada36c9b)
+<img width="1420" height="1116" alt="abs_image" src="https://github.com/user-attachments/assets/791c0c60-29a6-4497-86a9-5716049afe9a" />
 
 ---
 ## News & Updates
@@ -33,7 +33,7 @@ Read it here: [中文解读｜高质量美学海报生成框架 LucidFlux](https
 
 ---
 
-Let me know if this works!
+Let us know if this works!
 
 ## 👥 Authors
 
@@ -321,7 +321,6 @@ python demo_gradio.py
 
 </details>
 </div>
-**🌐 Explore more on our [Website](https://w2genai-lab.github.io/LucidFlux/)**
 <!-- 
 ## 🎭 Gallery & Examples
 
