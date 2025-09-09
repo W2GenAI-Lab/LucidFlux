@@ -442,8 +442,13 @@ python inference.py \
 
 Finially ```bash inference.sh```. You can also obtain the results of LucidFlux on RealSR and RealLQ250 from Hugging Face: [**LucidFlux**](https://huggingface.co/W2GenAI/LucidFlux).
 
+## 🪪 License
+
+The provided code and pre-trained weights are licensed under the [FLUX.1 [dev]](LICENSE).
 
 ## 🙏 Acknowledgments
+
+- This code is based on [FLUX](https://github.com/black-forest-labs/flux). Some code are brought from [DreamClear](https://github.com/shallowdream204/DreamClear). We thank the authors for their awesome work.
 
 - 🏛️ Thanks to our affiliated institutions for their support.
 - 🤝 Special thanks to the open-source community for inspiration.
