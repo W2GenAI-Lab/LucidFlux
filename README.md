@@ -20,17 +20,6 @@
 ---
 ## News & Updates
 
-
-<!-- - 🖥️ **[2025.06]** We have pushed our work on [MeiGen-AI](https://github.com/MeiGen-AI), where you can explore not only our project but also the work of other colleagues. Feel free to check it out for more insights and contributions.
-- 🧩 **[2025.06]** Community user [@AIFSH](https://github.com/AIFSH) has successfully integrated **LucidFlux into ComfyUI**!  
-  You can check out the full workflow here: [LucidFlux-ComfyUI Example](https://www.xiangongyun.com/image/detail/68b711eb-a31e-47db-82eb-47438359f4bf?r=XLVYLW)  
-  Big thanks to the contributor — this will be helpful for many users! See [Issue #6](https://github.com/Ephemeral182/LucidFlux/issues/6) for details.
-- 📖 **[2025.06]** Our **Chinese article** providing a detailed introduction and technical walkthrough of LucidFlux is now available!  
-Read it here: [中文解读｜高质量美学海报生成框架 LucidFlux](https://mp.weixin.qq.com/s/gq6DwohKP0z333OSDRe7Xw)
-- 🔥 **[2025.06]** We have deployed a demo on Hugging Face Space, feel free to give it a try!
-- 🚀 **[2025.06]** Our gradio demo and inference code are now available!
-- 📊 **[2025.06]** We have released partial datasets and model weights on HuggingFace. -->
-
 ---
 
 Let us know if this works!
@@ -376,16 +365,9 @@ python demo_gradio.py
 Our unified framework consists of **four critical components in the training workflow**:
 
 ### 🔤 Scaling Up Real-world High-Quality Data for Universal Image Restoration
-Existing restoration datasets are too small to support large diffusion models. To address this, we build a large-scale high-quality dataset through a three-stage automatic filtering pipeline (blur, flat-region, and IQA), selecting 342K images from 2.95M candidates. Using Real-ESRGAN, we further synthesize 1.37M paired samples, ensuring diverse and realistic degradations for effective training.
-
-### 🎨 Two Parallel ControlNet Branches for Low-Quality Image Conditioning 
-Flux.1 was not built for restoration, and existing ControlNet strategies either leave artifacts or oversmooth details. We follow DreamClear with a dual-branch design: one branch uses the raw LQ image to keep textures, while the other applies lightweight degradation removal. Together, they balance artifact removal and detail preservation for better restoration.
-
+### 🎨 Two Parallel Light-weight Condition Module Branches for Low-Quality Image Conditioning 
 ### 🎯 Timestep and Layer-Adaptive Condition Injection
-In diffusion models, early timesteps mainly capture global structures, while later ones enrich fine details. A similar hierarchy exists within DiT layers: shallow layers tend to model coarse, low-frequency patterns, whereas deeper layers refine high-frequency textures. Injecting identical conditions across all layers neglects this distinction. To address this, we design a timestep- and layer-adaptive modulation strategy, where ControlNet features are injected in accordance with both the current timestep and the target layer. This dynamic conditioning better aligns with the coarse-to-fine restoration process, leading to more effective detail recovery.
-
-### 🔄 SigLIP-Redux for Caption-Free Semantic Alignment
-Text-to-image (T2I) diffusion models are designed to generate images from text, and prior works often use captions during training and inference to guide restoration. However, training captions come from clean images, which are unavailable in real world scenario, and captions generated from degraded inputs may describe the degradation itself, misleading the model. To overcome this, we extract semantic features directly from the low-quality input using SigLIP and align them with the DiT feature space via a learnable connector, providing robust caption-free semantic guidance for high-fidelity restoration.
+### 🔄 Semantic Priors from Siglip for Caption-Free Semantic Alignment
 
 
 ## 🚀 Quick Start
