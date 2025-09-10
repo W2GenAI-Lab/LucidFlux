@@ -393,7 +393,7 @@ pip install -r requirements.txt
 
 ### Inference
 - **Flux.1 dev** → [🤗 FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev)  
-  Then update the flux path in `src/flux/util.py` to your local flux path.
+  Then update the model path in the `configs` for `flux-dev` in `src/flux/util.py` to your local FLUX.1-dev model path.
 
 - **T5** → [🤗 T5](https://huggingface.co/XLabs-AI/xflux_text_encoders)  
   Then update the T5 path in the function `load_t5` in `src/flux/util.py` to your local T5 path.
