@@ -93,66 +93,9 @@ def get_schedule(
 
     return timesteps.tolist()
 
-
-def denoise(
+def denoise_lucidflux(
     model: Flux,
-    # model input
-    img: Tensor,
-    img_ids: Tensor,
-    txt: Tensor,
-    txt_ids: Tensor,
-    vec: Tensor,
-    neg_txt: Tensor,
-    neg_txt_ids: Tensor,
-    neg_vec: Tensor,
-    # sampling parameters
-    timesteps: list[float],
-    guidance: float = 4.0,
-    true_gs = 1,
-    timestep_to_start_cfg=0,
-    # ip-adapter parameters
-    image_proj: Tensor=None, 
-    neg_image_proj: Tensor = None, 
-    ip_scale: Union[Tensor, float] = 1.0,
-    neg_ip_scale: Union[Tensor, float] = 1.0
-):
-    i = 0
-    # this is ignored for schnell
-    guidance_vec = torch.full((img.shape[0],), guidance, device=img.device, dtype=img.dtype)
-    for t_curr, t_prev in zip(timesteps[:-1], timesteps[1:]):
-        t_vec = torch.full((img.shape[0],), t_curr, dtype=img.dtype, device=img.device)
-        pred = model(
-            img=img,
-            img_ids=img_ids,
-            txt=txt,
-            txt_ids=txt_ids,
-            y=vec,
-            timesteps=t_vec,
-            guidance=guidance_vec,
-            image_proj=image_proj,
-            ip_scale=ip_scale, 
-        )
-        if i >= timestep_to_start_cfg:
-            neg_pred = model(
-                img=img,
-                img_ids=img_ids,
-                txt=neg_txt,
-                txt_ids=neg_txt_ids,
-                y=neg_vec,
-                timesteps=t_vec,
-                guidance=guidance_vec, 
-                image_proj=neg_image_proj,
-                ip_scale=neg_ip_scale, 
-            )     
-            pred = neg_pred + true_gs * (pred - neg_pred)
-        img = img + (t_prev - t_curr) * pred
-        i += 1
-    return img
-
-
-def denoise_controlnet(
-    model: Flux,
-    controlnet:None,
+    dual_condition_model:None,
     # model input
     img: Tensor,
     img_ids: Tensor,
@@ -161,15 +104,10 @@ def denoise_controlnet(
     siglip_txt: Tensor,
     siglip_txt_ids: Tensor,
     vec: Tensor,
-    controlnet_cond,
-    # sampling parameters
     timesteps: list[float],
     guidance: float = 4.0,
-    controlnet_gs=0.7,
-    # dual-control optional params
-    controlnet_cond_pre=None,
-    controlnet_w_lq: float = 1.0,
-    controlnet_w_pre: float = 1.0,
+    condition_cond_lq=None,
+    condition_cond_ldr=None,
 ):
     # this is ignored for schnell
     guidance_vec = torch.full((img.shape[0],), guidance, device=img.device, dtype=img.dtype)
@@ -181,87 +119,34 @@ def denoise_controlnet(
         txt_in = txt.to(dtype)
         txt_ids_in = txt_ids.to(dtype)
         vec_in = vec.to(dtype)
-        cond_lq = controlnet_cond.to(dtype)
-        cond_pre = controlnet_cond_pre.to(dtype) if controlnet_cond_pre is not None else None
+        cond_lq = condition_cond_lq.to(dtype)
+        cond_ldr = condition_cond_ldr.to(dtype)
 
-        # support single or dual control
-        if controlnet_cond_pre is not None:
-            try:
-                # try DualControlNet-style forward with pre-branch
-                block_res_samples = controlnet(
-                    img=img,
-                    img_ids=img_ids_in,
-                    controlnet_cond=cond_lq,
-                    txt=txt_in,
-                    txt_ids=txt_ids_in,
-                    y=vec_in,
-                    timesteps=t_vec,
-                    guidance=guidance_vec,
-                    controlnet_cond_pre=cond_pre,
-                    w_lq=controlnet_w_lq,
-                    w_pre=controlnet_w_pre,
-                )
-            except TypeError:
-                # fallback: call twice and fuse
-                out_lq = controlnet(
-                    img=img,
-                    img_ids=img_ids_in,
-                    controlnet_cond=cond_lq,
-                    txt=txt_in,
-                    txt_ids=txt_ids_in,
-                    y=vec_in,
-                    timesteps=t_vec,
-                    guidance=guidance_vec,
-                )
-                out_pre = controlnet(
-                    img=img,
-                    img_ids=img_ids_in,
-                    controlnet_cond=cond_pre,
-                    txt=txt_in,
-                    txt_ids=txt_ids_in,
-                    y=vec_in,
-                    timesteps=t_vec,
-                    guidance=guidance_vec,
-                )
-                block_res_samples = [controlnet_w_lq * a + controlnet_w_pre * b for a, b in zip(out_lq, out_pre)]
-        else:
-            block_res_samples = controlnet(
-                        img=img,
-                        img_ids=img_ids_in,
-                        controlnet_cond=cond_lq,
-                        txt=txt_in,
-                        txt_ids=txt_ids_in,
-                        y=vec_in,
-                        timesteps=t_vec,
-                        guidance=guidance_vec,
-                    )
-        if siglip_txt is not None:
-            pred = model(
-                img=img,
-                img_ids=img_ids_in,
-                txt=siglip_txt,
-                txt_ids=siglip_txt_ids,
-                y=vec_in,
-                timesteps=t_vec,
-                guidance=guidance_vec,
-                block_controlnet_hidden_states=[i * controlnet_gs for i in block_res_samples]
-            )
-        else:      
-            pred = model(
-                img=img,
-                img_ids=img_ids_in,
-                txt=txt_in,
-                txt_ids=txt_ids_in,
-                y=vec_in,
-                timesteps=t_vec,
-                guidance=guidance_vec,
-                block_controlnet_hidden_states=[i * controlnet_gs for i in block_res_samples]
-            )
+
+        block_res_samples = dual_condition_model(
+            img=img,
+            img_ids=img_ids_in,
+            condition_cond_lq=cond_lq,
+            condition_cond_ldr=cond_ldr,
+            txt=txt_in,
+            txt_ids=txt_ids_in,
+            y=vec_in,
+            timesteps=t_vec,
+            guidance=guidance_vec,
+        )
         
+        pred = model(
+            img=img,
+            img_ids=img_ids_in,
+            txt=siglip_txt,
+            txt_ids=siglip_txt_ids,
+            y=vec_in,
+            timesteps=t_vec,
+            guidance=guidance_vec,
+            block_controlnet_hidden_states=[i for i in block_res_samples]
+        )
 
         img = img + (t_prev - t_curr) * pred
-        #if use_gs:
-        #    img = torch.cat([img] * 2)
 
     return img
     

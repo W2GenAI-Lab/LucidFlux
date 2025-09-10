@@ -5,9 +5,9 @@ import numpy as np
 from PIL import Image
 from einops import rearrange
 
-from src.flux.sampling import denoise_controlnet, get_noise, get_schedule, prepare, unpack
+from src.flux.sampling import denoise_lucidflux, get_noise, get_schedule, prepare, unpack
 from src.flux.util import (load_ae, load_clip, load_t5,
-                           load_flow_model, load_controlnet, load_safetensors)
+                           load_flow_model, load_single_condition_branch, load_safetensors)
 from src.flux.swinir import SwinIR
 import torch.nn as nn
 from src.flux.align_color import wavelet_reconstruction
@@ -192,45 +192,42 @@ class Modulation(nn.Module):
         x = self.norm(x) * (1 + scale_msa[:, None]) + shift_msa[:, None]
         return x
 
-class DualControlNet(nn.Module):
-    def __init__(self, lq: nn.Module, pre: nn.Module, modulation_lq: nn.Module, modulation_pre: nn.Module):
+class DualConditionBranch(nn.Module):
+    def __init__(self, condition_branch_lq: nn.Module, condition_branch_ldr: nn.Module, modulation_lq: nn.Module, modulation_ldr: nn.Module):
         super().__init__()
-        self.lq = lq
-        self.pre = pre
+        self.lq = condition_branch_lq
+        self.ldr = condition_branch_ldr
         self.modulation_lq = modulation_lq
-        self.modulation_pre = modulation_pre
+        self.modulation_ldr = modulation_ldr
 
     def forward(
         self,
         *,
         img,
         img_ids,
-        controlnet_cond,
+        condition_cond_lq,
         txt,
         txt_ids,
         y,
         timesteps,
         guidance,
-        controlnet_cond_pre=None,
-        w_lq: float = None,
-        w_pre: float = None,
+        condition_cond_ldr=None,
     ):
         out_lq = self.lq(
             img=img,
             img_ids=img_ids,
-            controlnet_cond=controlnet_cond,
+            controlnet_cond=condition_cond_lq,
             txt=txt,
             txt_ids=txt_ids,
             y=y,
             timesteps=timesteps,
             guidance=guidance,
         )
-        if controlnet_cond_pre is None:
-            return out_lq
-        out_pre = self.pre(
+        
+        out_ldr = self.ldr(
             img=img,
             img_ids=img_ids,
-            controlnet_cond=controlnet_cond_pre,
+            controlnet_cond=condition_cond_ldr,
             txt=txt,
             txt_ids=txt_ids,
             y=y,
@@ -240,15 +237,15 @@ class DualControlNet(nn.Module):
         out = []
         num_blocks = 19
         for i in range(num_blocks // 2 + 1):
-            for control_index, (lq, pre) in enumerate(zip(out_lq, out_pre)):
+            for control_index, (lq, ldr) in enumerate(zip(out_lq, out_ldr)):
                 control_index = torch.tensor(control_index, device=timesteps.device, dtype=timesteps.dtype)
                 lq = self.modulation_lq(lq, timesteps, i * 2 + control_index)
 
                 if len(out) == num_blocks:
                     break
 
-                pre = self.modulation_pre(pre, timesteps, i * 2 + control_index)
-                out.append(lq + pre)
+                ldr = self.modulation_ldr(ldr, timesteps, i * 2 + control_index)
+                out.append(lq + ldr)
         return out
 
 
@@ -275,7 +272,7 @@ def create_argparser():
         "--offload", action='store_true', help="Offload model to CPU when not in use"
     )
     parser.add_argument(
-        "--output_dir", type=str, default="./controlnet_results/",
+        "--output_dir", type=str, default="./results/",
         help="The output directory where generation image is saved"
     )
     parser.add_argument(
@@ -289,15 +286,6 @@ def create_argparser():
     )
     parser.add_argument(
         "--guidance", type=float, default=4, help="The guidance for diffusion process"
-    )
-    parser.add_argument(
-        "--controlnet_gs", type=float, default=1.0, help="The guidance for controlnet"
-    )
-    parser.add_argument(
-        "--controlnet_lq_weight", type=float, default=1.0, help="weight for control branch"
-    )
-    parser.add_argument(
-        "--controlnet_pre_weight", type=float, default=1.0, help="weight for control branch"
     )
     parser.add_argument(
         "--seed", type=int, default=123456789, help="A seed for reproducible inference"
@@ -339,39 +327,39 @@ def main(args):
         os.makedirs(args.output_dir)
 
     # base models
-    model, ae, t5, clip, controlnet_lq = (
+    model, ae, t5, clip, condition_lq = (
         load_flow_model(name, device="cpu" if offload else torch_device),
         load_ae(name, device="cpu" if offload else torch_device),
         load_t5(torch_device, max_length=256 if is_schnell else 512),
         load_clip(torch_device),
-        load_controlnet(name, torch_device).to(torch.bfloat16),
+        load_single_condition_branch(name, torch_device).to(torch.bfloat16),
     )
     model = model.to(torch_device)
 
 
-    # load controlnet
+    # load model checkpoint
     if '.safetensors' in args.checkpoint:
         checkpoint = load_safetensors(args.checkpoint)
     else:
         checkpoint = torch.load(args.checkpoint, map_location='cpu')
 
-    controlnet_lq.load_state_dict(checkpoint["condition_lq"], strict=False)
-    controlnet_lq = controlnet_lq.to(torch_device)
+    condition_lq.load_state_dict(checkpoint["condition_lq"], strict=False)
+    condition_lq = condition_lq.to(torch_device)
 
-    controlnet_pre = load_controlnet(name, torch_device).to(torch.bfloat16)
-    controlnet_pre.load_state_dict(checkpoint["condition_ldr"], strict=False)
+    condition_ldr = load_single_condition_branch(name, torch_device).to(torch.bfloat16)
+    condition_ldr.load_state_dict(checkpoint["condition_ldr"], strict=False)
 
     modulation_lq = Modulation(dim=3072).to(torch.bfloat16)
     modulation_lq.load_state_dict(checkpoint["modulation_lq"], strict=False)
 
-    modulation_pre = Modulation(dim=3072).to(torch.bfloat16)
-    modulation_pre.load_state_dict(checkpoint["modulation_ldr"], strict=False)
+    modulation_ldr = Modulation(dim=3072).to(torch.bfloat16)
+    modulation_ldr.load_state_dict(checkpoint["modulation_ldr"], strict=False)
 
-    controlnet = DualControlNet(
-            controlnet_lq,
-            controlnet_pre,
+    dual_condition_branch = DualConditionBranch(
+            condition_lq,
+            condition_ldr,
             modulation_lq=modulation_lq,
-            modulation_pre=modulation_pre,
+            modulation_ldr=modulation_ldr,
         ).to(torch_device)
 
     # SwinIR prior (frozen)
@@ -442,16 +430,16 @@ def main(args):
         # 为每张图片获取实际处理后的尺寸
         lq_processed = preprocess_lq_image(img_path, args.width, args.height)
         lq_processed.save(os.path.join(args.output_dir, f"{filename}_lq_processed.jpeg"))
-        controlnet_cond = torch.from_numpy((np.array(lq_processed) / 127.5) - 1)
-        controlnet_cond = controlnet_cond.permute(2, 0, 1).unsqueeze(0).to(torch.bfloat16).to(torch_device)
-        controlnet_cond_pre = None
+        condition_cond = torch.from_numpy((np.array(lq_processed) / 127.5) - 1)
+        condition_cond = condition_cond.permute(2, 0, 1).unsqueeze(0).to(torch.bfloat16).to(torch_device)
+        condition_cond_ldr = None
 
         with torch.no_grad():
             # SwinIR prior
-            ci_01 = torch.clamp((controlnet_cond.float() + 1.0) / 2.0, 0.0, 1.0)
+            ci_01 = torch.clamp((condition_cond.float() + 1.0) / 2.0, 0.0, 1.0)
             ci_pre = swinir(ci_01).float().clamp(0.0, 1.0)
             save_image(ci_pre, os.path.join(args.output_dir, f"{filename}_swinir_pre.jpeg"))
-            controlnet_cond_pre = (ci_pre * 2.0 - 1.0).to(torch.bfloat16)
+            condition_cond_ldr = (ci_pre * 2.0 - 1.0).to(torch.bfloat16)
 
             # diffusion inputs
             torch.manual_seed(args.seed)
@@ -486,9 +474,9 @@ def main(args):
                 torch.cuda.empty_cache()
                 model = model.to(torch_device)
 
-            x = denoise_controlnet(
+            x = denoise_lucidflux(
                 model,
-                controlnet=controlnet,
+                dual_condition_model=dual_condition_branch,
                 img=inp_cond["img"],
                 img_ids=inp_cond["img_ids"],
                 txt=txt,
@@ -498,11 +486,8 @@ def main(args):
                 vec=inp_cond["vec"],
                 timesteps=timesteps,
                 guidance=args.guidance,
-                controlnet_cond=controlnet_cond,
-                controlnet_gs=args.controlnet_gs,
-                controlnet_cond_pre=controlnet_cond_pre,
-                controlnet_w_lq=args.controlnet_lq_weight,
-                controlnet_w_pre=args.controlnet_pre_weight,
+                condition_cond_lq=condition_cond,
+                condition_cond_ldr=condition_cond_ldr,
             )
             if offload:
                 model.cpu()
@@ -518,12 +503,12 @@ def main(args):
         x1 = x.clamp(-1, 1)
         x1 = rearrange(x1[-1], "c h w -> h w c")
         output_img = Image.fromarray((127.5 * (x1 + 1.0)).cpu().byte().numpy())
-        output_path = os.path.join(args.output_dir, f"{filename}_controlnet_result.jpeg")
+        output_path = os.path.join(args.output_dir, f"{filename}_result.jpeg")
         output_img.save(output_path)
 
         hq = wavelet_reconstruction((x1.permute(2, 0, 1) + 1.0) / 2, ci_pre.squeeze(0))
         hq = hq.clamp(0, 1)
-        save_image(hq, os.path.join(args.output_dir, f"{filename}_controlnet_result_wavelet.jpeg"))
+        save_image(hq, os.path.join(args.output_dir, f"{filename}_result_wavelet.jpeg"))
         print(f"[INFO] {filename}  is done. Path: {args.output_dir}")
         
 

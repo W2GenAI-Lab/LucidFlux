@@ -30,7 +30,7 @@ def zero_module(module):
     return module
 
 
-class ControlNetFlux(nn.Module):
+class SingleConditionBranch(nn.Module):
     """
     Transformer model for flow matching on sequences.
     """

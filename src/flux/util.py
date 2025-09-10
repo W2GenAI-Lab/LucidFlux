@@ -13,7 +13,7 @@ from safetensors.torch import load_file as load_sft
 from optimum.quanto import requantize
 
 from .model import Flux, FluxParams
-from .controlnet import ControlNetFlux
+from .condition import SingleConditionBranch
 from .modules.autoencoder import AutoEncoder, AutoEncoderParams
 from .modules.conditioner import HFEmbedder
 from .annotator.dwpose import DWposeDetector
@@ -23,7 +23,6 @@ from .annotator.midas import MidasDetector
 from .annotator.hed import HEDdetector
 from .annotator.tile import TileDetector
 from .annotator.zoe import ZoeDetector
-from .connect import SingleTokenRefiner
 from einops import rearrange
 
 
@@ -355,22 +354,12 @@ def load_flow_model_quintized(name: str, device: str, hf_download: bool = True):
     print("Model is quantized!")
     return model
 
-def load_controlnet(name, device, transformer=None):
+def load_single_condition_branch(name, device, transformer=None):
     with torch.device(device):
-        controlnet = ControlNetFlux(configs[name].params)
+        controlnet = SingleConditionBranch(configs[name].params)
     if transformer is not None:
         controlnet.load_state_dict(transformer.state_dict(), strict=False)
     return controlnet
-
-def load_connector(name, device):
-    params = configs[name].params
-    in_channels = params.in_channels
-    out_channels = params.in_channels
-    hidden_size = params.hidden_size
-    num_heads = params.num_heads
-    with torch.device(device):
-        connector = SingleTokenRefiner(in_channels=in_channels, hidden_size=hidden_size, heads_num=num_heads, depth=2, need_CA=False)
-    return connector
 
 def load_t5(device: str, max_length: int = 512) -> HFEmbedder:
     # max length 64, 128, 256 and 512 should work (if your sequence is short enough)
