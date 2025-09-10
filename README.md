@@ -9,7 +9,7 @@
 
 <!-- <img src="images/logo/logo2.png" alt="LucidFlux Logo" width="1200"/> -->
 
-### [**🌐 Website**](https://w2genai-lab.github.io/LucidFlux/) | [**📄 Technical Report**](Technical_Report.pdf) | [**🤗 Models**](https://github.com/W2GenAI-Lab/LucidFlux) 
+### [**🌐 Website**](https://w2genai-lab.github.io/LucidFlux/) | [**📄 Technical Report**](Technical_Report.pdf) | [**🤗 Models**](https://huggingface.co/W2GenAI/LucidFlux) 
 <!-- | [**🤗 HF Demo**](https://github.com/W2GenAI-Lab/LucidFlux) -->
 <!-- [**🎯 Demo**](https://github.com/W2GenAI-Lab/LucidFlux)  -->
 </div>
