@@ -364,10 +364,13 @@ python demo_gradio.py
 
 Our unified framework consists of **four critical components in the training workflow**:
 
-### 🔤 Scaling Up Real-world High-Quality Data for Universal Image Restoration
-### 🎨 Two Parallel Light-weight Condition Module Branches for Low-Quality Image Conditioning 
-### 🎯 Timestep and Layer-Adaptive Condition Injection
-### 🔄 Semantic Priors from Siglip for Caption-Free Semantic Alignment
+**🔤 Scaling Up Real-world High-Quality Data for Universal Image Restoration**
+
+**🎨 Two Parallel Light-weight Condition Module Branches for Low-Quality Image Conditioning**
+
+**🎯 Timestep and Layer-Adaptive Condition Injection**
+
+**🔄 Semantic Priors from Siglip for Caption-Free Semantic Alignment**
 
 
 ## 🚀 Quick Start
