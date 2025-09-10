@@ -191,29 +191,29 @@ class SingleConditionBranch(nn.Module):
 
         for block in self.double_blocks:
             if self.training and self.gradient_checkpointing:
-                # 关键：将 block 绑定进默认参数，避免闭包晚绑定
+                # Bind block as default arg to avoid late binding in closure
                 def _double_fwd(img_, txt_, vec_, pe_, _block=block):
                     out_img, out_txt = _block(img=img_, txt=txt_, vec=vec_, pe=pe_)
                     return out_img, out_txt
 
-                # PyTorch>=2.0 支持 use_reentrant；老版本则回退
+                # PyTorch>=2.0 supports use_reentrant; older versions fall back
                 try:
                     img, txt = torch.utils.checkpoint.checkpoint(
                         _double_fwd, img, txt, vec, pe,
                         use_reentrant=getattr(self, "_gc_use_reentrant", False)
                     )
                 except TypeError:
-                    # torch<2.0: 无 use_reentrant 参数
+                    # torch<2.0: no use_reentrant parameter
                     img, txt = torch.utils.checkpoint.checkpoint(
                         _double_fwd, img, txt, vec, pe
                     )
             else:
                 img, txt = block(img=img, txt=txt, vec=vec, pe=pe)
 
-            # 和你原逻辑一致：收集每个 double block 的 img 残差输出
+            # Collect img residual from each double block (same as original logic)
             block_res_samples += (img,)
 
-        # 逐个送入 controlnet blocks
+        # Feed residuals into controlnet blocks one by one
         controlnet_block_res_samples = ()
         for block_res_sample, controlnet_block in zip(block_res_samples, self.controlnet_blocks):
             block_res_sample = controlnet_block(block_res_sample)

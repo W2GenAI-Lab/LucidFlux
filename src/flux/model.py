@@ -166,11 +166,11 @@ class Flux(nn.Module):
         if block_controlnet_hidden_states is not None:
             controlnet_depth = len(block_controlnet_hidden_states)
         # Double-stream blocks
-        # ------ 在 double_blocks 循环里 ------
+        # ------ Inside double_blocks loop ------
         for index_block, block in enumerate(self.double_blocks):
             if self.training and self.gradient_checkpointing:
 
-                # 关键：把 block 绑定为默认参数 _block=block，避免晚绑定
+                # Bind _block=block as default arg to avoid late binding
                 def _double_fwd(img_, txt_, vec_, pe_,
                                 image_proj_=image_proj, ip_scale_=ip_scale, _block=block):
                     out_img, out_txt = _block(
@@ -193,12 +193,12 @@ class Flux(nn.Module):
                 # print("len", len(block_controlnet_hidden_states), index_block)
                 img = img + block_controlnet_hidden_states[index_block]
 
-        # ------ 在 single_blocks 循环里 ------
+        # ------ Inside single_blocks loop ------
         img = torch.cat((txt, img), dim=1)
         for block in self.single_blocks:
             if self.training and self.gradient_checkpointing:
 
-                # 同理绑定 _block=block
+                # Same binding trick for _block=block
                 def _single_fwd(img_, vec_, pe_, _block=block):
                     return _block(img_, vec=vec_, pe=pe_)
 

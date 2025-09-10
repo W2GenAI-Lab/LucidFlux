@@ -386,46 +386,34 @@ pip install -r requirements.txt
 ```
 
 ### Inference
-- **Flux.1 dev** → [🤗 FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev)  
-  Then update the model path in the `configs` for `flux-dev` in `src/flux/util.py` to your local FLUX.1-dev model path.
 
-- **T5** → [🤗 T5](https://huggingface.co/XLabs-AI/xflux_text_encoders)  
-  Then update the T5 path in the function `load_t5` in `src/flux/util.py` to your local T5 path.
+Prepare models in 2 steps, then run a single command.
 
-- **CLIP** → [🤗 CLIP](https://huggingface.co/openai/clip-vit-large-patch14)  
-  Then update the CLIP path in the function `load_clip` in `src/flux/util.py` to your local CLIP path.
+1) Login to Hugging Face (required for gated FLUX.1-dev). Skip if already logged-in.
 
-- **SigLIP** → [🤗 siglip2-so400m-patch16-512](https://huggingface.co/google/siglip2-so400m-patch16-512)  
-  Then set `siglip_ckpt` to the corresponding local path.
-
-- **SwinIR** → [🤗 SwinIR](https://huggingface.co/lxq007/DiffBIR/blob/main/general_swinir_v1.ckpt)  
-  Then set `swin_ir_ckpt` to the corresponding local path.
-
-- **LucidFlux** → [🤗 LucidFlux](https://huggingface.co/W2GenAI/LucidFlux)  
-  Then set `checkpoint` to the corresponding local path.
-
-```bash 
-inference.sh
-
-result_dir=ouput_images_folder
-input_folder=input_images_folder
-checkpoint_path=path/to/lucidflux.pth
-swin_ir_ckpt=path/to/swinir.ckpt
-siglip_ckpt=path/to/siglip.ckpt
-
-mkdir -p ${result_dir}
-echo "Processing checkpoint..."
-python inference.py \
-  --checkpoint ${checkpoint_path} \
-  --swinir_pretrained ${swin_ir_ckpt} \
-  --control_image ${input_folder} \
-  --siglip_ckpt ${siglip_ckpt} \
-  --prompt "restore this image into high-quality, clean, high-resolution result" \
-  --output_dir ${result_dir}/ \
-  --width 1024 --height 1024 --num_steps 50 \
+```bash
+python -m tools.hf_login --token "$HF_TOKEN"
 ```
 
-Finially ```bash inference.sh```. You can also obtain the results of LucidFlux on RealSR and RealLQ250 from Hugging Face: [**LucidFlux**](https://huggingface.co/W2GenAI/LucidFlux).
+2) Download required weights to fixed paths and export env vars
+
+```bash
+# FLUX.1-dev (flow+ae), SwinIR prior, T5, CLIP, SigLIP and LucidFlux checkpoint to ./weights
+python -m tools.download_weights --dest weights
+
+# Exports FLUX_DEV_FLOW/FLUX_DEV_AE to your shell
+source weights/env.sh
+```
+
+```
+
+Run inference (uses fixed relative paths):
+
+```bash
+bash inference.sh
+```
+
+You can also obtain results of LucidFlux on RealSR and RealLQ250 from Hugging Face: [**LucidFlux**](https://huggingface.co/W2GenAI/LucidFlux).
 
 ## 🪪 License
 
