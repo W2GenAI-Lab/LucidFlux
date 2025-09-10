@@ -1,12 +1,6 @@
 <div align="center">
 <h1>🎨 LucidFlux:<br/>Caption-Free Universal Image Restoration with a Large-Scale Diffusion Transformer</h1>
 
-<!-- [![arXiv](https://img.shields.io/badge/arXiv-2506.10741-red)](https://github.com/W2GenAI-Lab/LucidFlux)
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue)](https://github.com/W2GenAI-Lab/LucidFlux)
-[![HuggingFace](https://img.shields.io/badge/🤗-HuggingFace-yellow)](https://github.com/W2GenAI-Lab/LucidFlux)
-[![Website](https://img.shields.io/badge/🌐-Website-green)](https://github.com/W2GenAI-Lab/LucidFlux)
-[![HF Demo](https://img.shields.io/badge/🤗-HF_Demo-orange)](https://github.com/W2GenAI-Lab/LucidFlux) -->
-
 <!-- <img src="images/logo/logo2.png" alt="LucidFlux Logo" width="1200"/> -->
 
 ### [**🌐 Website**](https://w2genai-lab.github.io/LucidFlux/) | [**📄 Technical Report**](Technical_Report.pdf) | [**🤗 Models**](https://huggingface.co/W2GenAI/LucidFlux) 
@@ -405,7 +399,6 @@ python -m tools.download_weights --dest weights
 source weights/env.sh
 ```
 
-```
 
 Run inference (uses fixed relative paths):
 
