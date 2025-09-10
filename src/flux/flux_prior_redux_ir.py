@@ -27,7 +27,7 @@ from transformers import (
 )
 from diffusers.image_processor import PipelineImageInput, VaeImageProcessor
 from diffusers.loaders import (
-    FluxLoraLoaderMixin,          # 如找不到该符号，请升级 diffusers；或退回用 LoraLoaderMixin
+    FluxLoraLoaderMixin,          # If symbol missing, upgrade diffusers or fallback to LoraLoaderMixin
     TextualInversionLoaderMixin,
 )
 from diffusers.utils import logging
@@ -49,53 +49,53 @@ def siglip_from_unit_tensor(
     strict_range=True,
 ):
     """
-    x: (1,3,H,W) 或 (3,H,W)，值域 [0,1]
-    返回: (1,3,512,512)，值域 [-1,1]，与 SiglipImageProcessor 完全等价
-    
-    关键修复：
-    1. 使用 PIL.Image.LANCZOS (resample=1) 而非 torch bilinear
-    2. 确保与 transformers SiglipImageProcessor 的精确一致性
+    x: (1,3,H,W) or (3,H,W), values in [0, 1]
+    Returns: (1,3,512,512), values in [-1, 1], equivalent to SiglipImageProcessor
+
+    Key fixes:
+    1. Use PIL resize (see resample below) instead of torch bilinear
+    2. Ensure exact parity with transformers' SiglipImageProcessor
     """
     from PIL import Image
     import numpy as np
     
-    # 支持 (3,H,W) 输入
+    # Support (3,H,W) input
     if x.ndim == 3:
         x = x.unsqueeze(0)
-    assert x.ndim == 4 and x.shape[1] == 3, "期望形状 (B,3,H,W)"
+    assert x.ndim == 4 and x.shape[1] == 3, "Expected shape (B,3,H,W)"
     
     if strict_range:
         minv, maxv = float(x.min()), float(x.max())
         if minv < -1e-3 or maxv > 1 + 1e-3:
-            raise ValueError(f"输入应为 [0,1]，当前范围 [{minv:.4f},{maxv:.4f}]")
+            raise ValueError(f"Input must be in [0,1], got range [{minv:.4f},{maxv:.4f}]")
 
     batch_size = x.shape[0]
     processed_batch = []
     
     for i in range(batch_size):
-        # 1) 转换为 PIL Image (HWC, uint8)
+        # 1) Convert to PIL Image (HWC, uint8)
         img_tensor = x[i].permute(1, 2, 0)  # CHW -> HWC
         img_np = (img_tensor.cpu().numpy() * 255).astype(np.uint8)
         pil_img = Image.fromarray(img_np, mode='RGB')
-        
-        # 2) 用 PIL resize (与 SiglipImageProcessor 相同的 resample=2，即 BILINEAR)
+
+        # 2) Resize with PIL (resample=2 i.e., BILINEAR, matches SiglipImageProcessor)
         if pil_img.size != size:
-            # resample=2 对应 PIL.Image.BILINEAR
+            # resample=2 corresponds to PIL.Image.BILINEAR
             pil_img = pil_img.resize(size, resample=2)
-        
-        # 3) 转回 tensor 并归一化
+
+        # 3) Back to tensor and normalize
         img_array = np.array(pil_img, dtype=np.float32) / 255.0  # [0,1]
         img_tensor = torch.from_numpy(img_array).permute(2, 0, 1)  # HWC -> CHW
-        
-        # 4) 归一化到 [-1,1]: (x - 0.5) / 0.5
+
+        # 4) Normalize to [-1,1]: (x - 0.5) / 0.5
         img_tensor = (img_tensor - 0.5) / 0.5
-        
+
         processed_batch.append(img_tensor)
     
-    # 5) 堆叠为 batch
+    # 5) Stack into batch
     result = torch.stack(processed_batch, dim=0)
     
-    # 6) 放到目标 device/dtype
+    # 6) Move to target device/dtype
     if device is not None:
         result = result.to(device=device, dtype=out_dtype)
     else:
@@ -199,7 +199,7 @@ class FluxPriorReduxPipeline(DiffusionPipeline):
             raise ValueError(
                 "If `prompt_embeds` are provided, `pooled_prompt_embeds` also have to be passed. Make sure to generate `pooled_prompt_embeds` from the same text encoder that was used to generate `prompt_embeds`."
             )
-        # 推断 batch 大小用于长度一致性检查
+        # Infer batch size for consistency checks
         inferred_batch_size = None
         if image_embeds is not None and isinstance(image_embeds, torch.Tensor):
             inferred_batch_size = image_embeds.shape[0]
@@ -228,10 +228,10 @@ class FluxPriorReduxPipeline(DiffusionPipeline):
     def encode_image(self, image, device, num_images_per_prompt):
         dtype = next(self.image_encoder.parameters()).dtype
 
-        # 支持三类输入：
-        # 1) 预处理好的 pixel tensor: torch.Tensor[B,3,H,W] 或 [3,H,W]
-        # 2) 包含 'pixel_values' 的 dict/BatchFeature
-        # 3) 原始 PIL/np/list，由 feature_extractor 预处理
+        # Support three input categories:
+        # 1) Preprocessed pixel tensor: torch.Tensor[B,3,H,W] or [3,H,W]
+        # 2) Dict/BatchFeature containing 'pixel_values'
+        # 3) Raw PIL/np/list to be preprocessed by feature_extractor
         if isinstance(image, torch.Tensor):
             if image.dim() == 3:
                 image = image.unsqueeze(0)
@@ -243,7 +243,7 @@ class FluxPriorReduxPipeline(DiffusionPipeline):
                     pixel_values = pixel_values.unsqueeze(0)
                 inputs = {"pixel_values": pixel_values.to(device=device, dtype=dtype)}
             else:
-                # 若是 transformers 的 BatchFeature，通常具备 .to()
+                # If it's a transformers BatchFeature, it usually has .to()
                 if hasattr(image, "to"):
                     image = image.to(device=device, dtype=dtype)
                     inputs = image
@@ -499,7 +499,7 @@ class FluxPriorReduxPipeline(DiffusionPipeline):
                 pixel_values = image["pixel_values"]
                 batch_size = pixel_values.shape[0] if pixel_values.dim() == 4 else 1
             else:
-                # transformers BatchFeature 一般含有 'pixel_values'
+                # transformers BatchFeature typically contains 'pixel_values'
                 batch_size = 1
         elif image is not None and isinstance(image, torch.Tensor):
             batch_size = image.shape[0] if image.dim() == 4 else 1
@@ -516,15 +516,15 @@ class FluxPriorReduxPipeline(DiffusionPipeline):
 
         device = self._execution_device
 
-        # 3. Prepare image embeddings (允许直接传入 image_latents 绕过视觉编码器)
+        # 3. Prepare image embeddings (allow passing image_latents to bypass the vision encoder)
         if image_embeds is None:
             if image_latents is None:
                 image_latents = self.encode_image(image, device, 1)
             else:
-                # 对齐设备与 dtype
+                # Align device and dtype
                 dtype_image_encoder = next(self.image_encoder.parameters()).dtype
                 if image_latents.dim() == 2:
-                    # 非预期形状；至少应为 (B, N, D)
+                    # Unexpected shape; expect at least (B, N, D)
                     raise ValueError("`image_latents` shape is invalid. Expect at least 3D tensor (B, N, D).")
                 image_latents = image_latents.to(device=device, dtype=dtype_image_encoder)
 
@@ -535,9 +535,9 @@ class FluxPriorReduxPipeline(DiffusionPipeline):
             if image_embeds.dim() == 2:
                 image_embeds = image_embeds.unsqueeze(1)
 
-        # 3. Prepare text embeddings（允许直接传入 prompt_embeds/pooled_prompt_embeds）
+        # 3. Prepare text embeddings (allow passing prompt_embeds/pooled_prompt_embeds directly)
         if prompt_embeds is not None and pooled_prompt_embeds is not None:
-            # 归一化形状与设备
+            # Normalize shapes and devices
             if isinstance(prompt_embeds, torch.Tensor) and prompt_embeds.dim() == 2:
                 prompt_embeds = prompt_embeds.unsqueeze(0)
             if isinstance(pooled_prompt_embeds, torch.Tensor) and pooled_prompt_embeds.dim() == 1:
@@ -571,7 +571,7 @@ class FluxPriorReduxPipeline(DiffusionPipeline):
                 # pooled_prompt_embeds is 768, clip text encoder hidden size
                 pooled_prompt_embeds = torch.zeros((batch_size, 768), device=device, dtype=image_embeds.dtype)
 
-        # scale & concatenate image and text embeddings（校验最后一维一致）
+        # Scale and concatenate image/text embeddings (validate last dim equality)
         if prompt_embeds.shape[-1] != image_embeds.shape[-1]:
             raise ValueError(
                 f"The last dimension of `prompt_embeds` ({prompt_embeds.shape[-1]}) must match that of `image_embeds` ({image_embeds.shape[-1]})."
@@ -583,7 +583,7 @@ class FluxPriorReduxPipeline(DiffusionPipeline):
             :, None
         ]
 
-        # weighted sum 或保持 batch
+        # Weighted sum across batch or keep per-sample
         if aggregate_batch:
             prompt_embeds = torch.sum(prompt_embeds, dim=0, keepdim=True)
             pooled_prompt_embeds = torch.sum(pooled_prompt_embeds, dim=0, keepdim=True)

@@ -10,19 +10,11 @@ from huggingface_hub import hf_hub_download
 from safetensors import safe_open
 from safetensors.torch import load_file as load_sft
 
-from optimum.quanto import requantize
 
 from .model import Flux, FluxParams
 from .condition import SingleConditionBranch
 from .modules.autoencoder import AutoEncoder, AutoEncoderParams
 from .modules.conditioner import HFEmbedder
-from .annotator.dwpose import DWposeDetector
-from .annotator.mlsd import MLSDdetector
-from .annotator.canny import CannyDetector
-from .annotator.midas import MidasDetector
-from .annotator.hed import HEDdetector
-from .annotator.tile import TileDetector
-from .annotator.zoe import ZoeDetector
 from einops import rearrange
 
 
@@ -112,45 +104,6 @@ def resize_image_with_pad(input_image, resolution, skip_hwc3=False, mode='edge')
 
     return safer_memory(img_padded), remove_pad
 
-class Annotator:
-    def __init__(self, name: str, device: str):
-        if name == "canny":
-            processor = CannyDetector()
-        elif name == "openpose":
-            processor = DWposeDetector(device)
-        elif name == "depth":
-            processor = MidasDetector()
-        elif name == "hed":
-            processor = HEDdetector()
-        elif name == "hough":
-            processor = MLSDdetector()
-        elif name == "tile":
-            processor = TileDetector()
-        elif name == "zoe":
-            processor = ZoeDetector()
-        self.name = name
-        self.processor = processor
-
-    def __call__(self, image: Image, width: int, height: int):
-        image = np.array(image)
-        detect_resolution = max(width, height)
-        image, remove_pad = resize_image_with_pad(image, detect_resolution)
-
-        image = np.array(image)
-        if self.name == "canny":
-            result = self.processor(image, low_threshold=100, high_threshold=200)
-        elif self.name == "hough":
-            result = self.processor(image, thr_v=0.05, thr_d=5)
-        elif self.name == "depth":
-            result = self.processor(image)
-            result, _ = result
-        else:
-            result = self.processor(image)
-
-        result = HWC3(remove_pad(result))
-        result = cv2.resize(result, (width, height))
-        return result
-
 
 @dataclass
 class ModelSpec:
@@ -166,11 +119,11 @@ class ModelSpec:
 
 configs = {
     "flux-dev": ModelSpec(
-        repo_id="/hpc2hdd/home/sfei285/Project/flux-dev-trainer/FLUX.1-dev",
-        repo_id_ae="/hpc2hdd/home/sfei285/Project/flux-dev-trainer/FLUX.1-dev",
+        repo_id=os.getenv("FLUX_DEV_REPO", "black-forest-labs/FLUX.1-dev"),
+        repo_id_ae=os.getenv("FLUX_DEV_REPO", "black-forest-labs/FLUX.1-dev"),
         repo_flow="flux1-dev.safetensors",
         repo_ae="ae.safetensors",
-        ckpt_path="/hpc2hdd/home/sfei285/Project/flux-dev-trainer/FLUX.1-dev/flux1-dev.safetensors",
+        ckpt_path=os.getenv("FLUX_DEV_FLOW"),
         params=FluxParams(
             in_channels=64,
             vec_in_dim=768,
@@ -185,7 +138,7 @@ configs = {
             qkv_bias=True,
             guidance_embed=True,
         ),
-        ae_path="/hpc2hdd/home/sfei285/Project/flux-dev-trainer/FLUX.1-dev/ae.safetensors",
+        ae_path=os.getenv("FLUX_DEV_AE"),
         ae_params=AutoEncoderParams(
             resolution=256,
             in_channels=3,
@@ -232,11 +185,11 @@ configs = {
         ),
     ),
     "flux-schnell": ModelSpec(
-        repo_id="/hpc2hdd/home/sfei285/Project/Flux-ControlNetIR-Trainer/FLUX.1-schnell",
-        repo_id_ae="/hpc2hdd/home/sfei285/Project/flux-dev-trainer/FLUX.1-dev",
+        repo_id=os.getenv("FLUX_SCHNELL_REPO", "/hpc2hdd/home/sfei285/Project/Flux-ControlNetIR-Trainer/FLUX.1-schnell"),
+        repo_id_ae=os.getenv("FLUX_DEV_REPO", "black-forest-labs/FLUX.1-dev"),
         repo_flow="flux1-schnell.safetensors",
         repo_ae="ae.safetensors",
-        ckpt_path="/hpc2hdd/home/sfei285/Project/Flux-ControlNetIR-Trainer/FLUX.1-schnell/flux1-schnell.safetensors",
+        ckpt_path=os.getenv("FLUX_SCHNELL_FLOW", "/hpc2hdd/home/sfei285/Project/Flux-ControlNetIR-Trainer/FLUX.1-schnell/flux1-schnell.safetensors"),
         params=FluxParams(
             in_channels=64,
             vec_in_dim=768,
@@ -251,7 +204,7 @@ configs = {
             qkv_bias=True,
             guidance_embed=False,
         ),
-        ae_path="/hpc2hdd/home/sfei285/Project/flux-dev-trainer/FLUX.1-dev/ae.safetensors",
+        ae_path=os.getenv("FLUX_DEV_AE"),
         ae_params=AutoEncoderParams(
             resolution=256,
             in_channels=3,
@@ -347,6 +300,8 @@ def load_flow_model_quintized(name: str, device: str, hf_download: bool = True):
     print("Loading checkpoint")
     # load_sft doesn't support torch.device
     sd = load_sft(ckpt_path, device='cpu')
+    # Import here to avoid heavy quanto/transformers side effects at module import time
+    from optimum.quanto import requantize
     with open(json_path, "r") as f:
         quantization_map = json.load(f)
     print("Start a quantization process...")
@@ -364,10 +319,12 @@ def load_single_condition_branch(name, device, transformer=None):
 def load_t5(device: str, max_length: int = 512) -> HFEmbedder:
     # max length 64, 128, 256 and 512 should work (if your sequence is short enough)
     # Avoid passing bf16 under ZeRO-3 to prevent potential embedding init issues
-    return HFEmbedder(version="/hpc2hdd/home/sfei285/Project/Flux-ControlNetIR-Trainer/xflux_text_encoders", max_length=max_length).to(device)
+    t5_version = os.getenv("T5_PATH", "XLabs-AI/xflux_text_encoders")
+    return HFEmbedder(version=t5_version, max_length=max_length).to(device)
 
 def load_clip(device: str) -> HFEmbedder:
-    return HFEmbedder(version="/hpc2hdd/home/sfei285/Project/Flux-ControlNetIR-Trainer/clip-vit-large-patch14", max_length=77, torch_dtype=torch.bfloat16).to(device)
+    clip_version = os.getenv("CLIP_PATH", "openai/clip-vit-large-patch14")
+    return HFEmbedder(version=clip_version, max_length=77, torch_dtype=torch.bfloat16).to(device)
 
 
 def load_ae(name: str, device: str, hf_download: bool = True) -> AutoEncoder:

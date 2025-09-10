@@ -372,19 +372,19 @@ def attention_after_rope(q, k, v, pe):
 
 @torch.compile(mode="max-autotune-no-cudagraphs", dynamic=True)
 def apply_rope(xq, xk, freqs_cis):
-    # 将 num_heads 和 seq_len 的维度交换回原函数的处理顺序
+    # Swap num_heads and seq_len back to the original function order
     xq = xq.transpose(1, 2)  # [batch, num_heads, seq_len, head_dim]
     xk = xk.transpose(1, 2)
 
-    # 将 head_dim 拆分为复数部分（实部和虚部）
+    # Split head_dim into complex parts (real/imag)
     xq_ = xq.float().reshape(*xq.shape[:-1], -1, 1, 2)
     xk_ = xk.float().reshape(*xk.shape[:-1], -1, 1, 2)
 
-    # 应用旋转位置编码（复数乘法）
+    # Apply rotary position embedding (complex mul)
     xq_out = freqs_cis[..., 0] * xq_[..., 0] + freqs_cis[..., 1] * xq_[..., 1]
     xk_out = freqs_cis[..., 0] * xk_[..., 0] + freqs_cis[..., 1] * xk_[..., 1]
 
-    # 恢复张量形状并转置回目标维度顺序
+    # Restore shape and transpose back to expected dims
     xq_out = xq_out.reshape(*xq.shape).type_as(xq).transpose(1, 2)
     xk_out = xk_out.reshape(*xk.shape).type_as(xk).transpose(1, 2)
 
