@@ -395,6 +395,12 @@ pip install -r requirements.txt
 - **Flux.1 dev** → [🤗 FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev)  
   Then update the flux path in `src/flux/util.py` to your local flux path.
 
+- **T5** → [🤗 T5](https://huggingface.co/XLabs-AI/xflux_text_encoders)  
+  Then update the T5 path in the function `load_t5` in `src/flux/util.py` to your local T5 path.
+
+- **CLIP** → [🤗 CLIP](https://huggingface.co/openai/clip-vit-large-patch14)  
+  Then update the CLIP path in the function `load_clip` in `src/flux/util.py` to your local CLIP path.
+
 - **SigLIP** → [🤗 siglip2-so400m-patch16-512](https://huggingface.co/google/siglip2-so400m-patch16-512)  
   Then set `siglip_ckpt` to the corresponding local path.
 
