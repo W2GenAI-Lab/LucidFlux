@@ -178,7 +178,7 @@ class Modulation(nn.Module):
         
         timesteps_emb = self.timestep_embedder(timesteps_proj.to(dtype=x.dtype))  # (N, D)
 
-        # 将标量 control_index 扩展为 batch 维度，并用与时间相同的投影获得 256 维输入
+        # Expand scalar control_index to batch dimension and project like timesteps (256-dim)
         if control_index.dim() == 0:
             control_index = control_index.repeat(x.shape[0])
         elif control_index.dim() == 1 and control_index.shape[0] != x.shape[0]:
@@ -427,7 +427,7 @@ def main(args):
     for img_path in input_paths:
         filename = os.path.basename(img_path).split(".")[0]
         
-        # 为每张图片获取实际处理后的尺寸
+        # For each image, compute processed resolution and persist preview
         lq_processed = preprocess_lq_image(img_path, args.width, args.height)
         lq_processed.save(os.path.join(args.output_dir, f"{filename}_lq_processed.jpeg"))
         condition_cond = torch.from_numpy((np.array(lq_processed) / 127.5) - 1)
@@ -438,7 +438,7 @@ def main(args):
             # SwinIR prior
             ci_01 = torch.clamp((condition_cond.float() + 1.0) / 2.0, 0.0, 1.0)
             ci_pre = swinir(ci_01).float().clamp(0.0, 1.0)
-            save_image(ci_pre, os.path.join(args.output_dir, f"{filename}_swinir_pre.jpeg"))
+            # save_image(ci_pre, os.path.join(args.output_dir, f"{filename}_swinir_pre.jpeg"))
             condition_cond_ldr = (ci_pre * 2.0 - 1.0).to(torch.bfloat16)
 
             # diffusion inputs
@@ -452,7 +452,9 @@ def main(args):
             inp_cond = prepare(t5=t5, clip=clip, img=x, prompt=args.prompt)
 
             # SigLIP feature -> Redux image embeds
-            siglip_pixel_values_pre = siglip_from_unit_tensor(ci_pre)
+            # Match preprocessing size to SigLIP config to avoid positional embedding mismatch
+            siglip_size = getattr(getattr(siglip_model, "config", None), "image_size", 512)
+            siglip_pixel_values_pre = siglip_from_unit_tensor(ci_pre, size=(siglip_size, siglip_size))
             inputs = {"pixel_values": siglip_pixel_values_pre.to(device=torch_device, dtype=dtype)}
             siglip_image_pre_fts = siglip_model(**inputs).last_hidden_state.to(dtype=dtype)
             enc_dtype = redux_image_encoder.redux_up.weight.dtype
@@ -503,12 +505,10 @@ def main(args):
         x1 = x.clamp(-1, 1)
         x1 = rearrange(x1[-1], "c h w -> h w c")
         output_img = Image.fromarray((127.5 * (x1 + 1.0)).cpu().byte().numpy())
-        output_path = os.path.join(args.output_dir, f"{filename}_result.jpeg")
-        output_img.save(output_path)
 
         hq = wavelet_reconstruction((x1.permute(2, 0, 1) + 1.0) / 2, ci_pre.squeeze(0))
         hq = hq.clamp(0, 1)
-        save_image(hq, os.path.join(args.output_dir, f"{filename}_result_wavelet.jpeg"))
+        save_image(hq, os.path.join(args.output_dir, f"{filename}_result.jpeg"))
         print(f"[INFO] {filename}  is done. Path: {args.output_dir}")
         
 

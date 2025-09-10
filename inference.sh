@@ -1,16 +1,16 @@
-result_dir=ouput_images_folder
-input_folder=input_images_folder
-checkpoint_path=path/to/lucidflux.pth
-swin_ir_ckpt=path/to/swinir.ckpt
-siglip_ckpt=path/to/siglip.ckpt
+#!/usr/bin/env bash
+set -e
 
-mkdir -p ${result_dir}
-echo "Processing checkpoint..."
+# Minimal, readable, zero-logic wrapper. All paths are relative.
+# Ensure you've prepared weights beforehand (e.g., source weights/env.sh for FLUX base).
+
 python inference.py \
-  --checkpoint ${checkpoint_path} \
-  --swinir_pretrained ${swin_ir_ckpt} \
-  --control_image ${input_folder} \
-  --siglip_ckpt ${siglip_ckpt} \
+  --checkpoint weights/lucidflux/lucidflux.pth \
+  --control_image assets/3.png \
   --prompt "restore this image into high-quality, clean, high-resolution result" \
-  --output_dir ${result_dir}/ \
-  --width 1024 --height 1024 --num_steps 50 \
+  --output_dir outputs \
+  --width 1024 \
+  --height 1024 \
+  --num_steps 20 \
+  --swinir_pretrained weights/swinir.pth \
+  --siglip_ckpt weights/siglip
