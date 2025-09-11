@@ -317,24 +317,25 @@ python demo_gradio.py
     <td width="200"><b>LQ</b></td>
     <td width="200"><b>HYPIR</b></td>
     <td width="200"><b>Topaz</b></td>
+    <td width="200"><b>SeeDream 4.0</b></td>
     <td width="200"><b>Gemini-NanoBanana</b></td>
     <td width="200"><b>GPT-4o</b></td>
     <td width="200"><b>Ours</b></td>
 </tr>
-<tr align="center"><td colspan="6"><img src="images/commercial_comparison/commercial_061.jpg" width="1200"></td></tr>
-<tr align="center"><td colspan="6"><img src="images/commercial_comparison/commercial_094.jpg" width="1200"></td></tr>
-<tr align="center"><td colspan="6"><img src="images/commercial_comparison/commercial_205.jpg" width="1200"></td></tr>
-<tr align="center"><td colspan="6"><img src="images/commercial_comparison/commercial_209.jpg" width="1200"></td></tr>
+<tr align="center"><td colspan="7"><img src="images/commercial_comparison/commercial_061.jpg" width="1400"></td></tr>
+<tr align="center"><td colspan="7"><img src="images/commercial_comparison/commercial_094.jpg" width="1400"></td></tr>
+<tr align="center"><td colspan="7"><img src="images/commercial_comparison/commercial_205.jpg" width="1400"></td></tr>
+<tr align="center"><td colspan="7"><img src="images/commercial_comparison/commercial_209.jpg" width="1400"></td></tr>
 </table>
 
 <details>
 <summary>Show more examples</summary>
 
 <table>
-<tr align="center"><td colspan="6"><img src="images/commercial_comparison/commercial_062.jpg" width="1200"></td></tr>
-<tr align="center"><td colspan="6"><img src="images/commercial_comparison/commercial_160.jpg" width="1200"></td></tr>
-<tr align="center"><td colspan="6"><img src="images/commercial_comparison/commercial_111.jpg" width="1200"></td></tr>
-<tr align="center"><td colspan="6"><img src="images/commercial_comparison/commercial_123.jpg" width="1200"></td></tr>
+<tr align="center"><td colspan="7"><img src="images/commercial_comparison/commercial_062.jpg" width="1400"></td></tr>
+<tr align="center"><td colspan="7"><img src="images/commercial_comparison/commercial_160.jpg" width="1400"></td></tr>
+<tr align="center"><td colspan="7"><img src="images/commercial_comparison/commercial_111.jpg" width="1400"></td></tr>
+<tr align="center"><td colspan="7"><img src="images/commercial_comparison/commercial_123.jpg" width="1400"></td></tr>
 </table>
 
 </details>

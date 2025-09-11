@@ -6,6 +6,7 @@ output/
 seesr/
 **__pycache__/
 supir/
+weights/
 sinsr/
 .claude/
 cat.sh
