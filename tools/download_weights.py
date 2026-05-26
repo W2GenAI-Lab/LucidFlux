@@ -15,8 +15,13 @@ SWINIR_FILE = "general_swinir_v1.ckpt"
 LUCIDFLUX_REPO = "W2GenAI/LucidFlux"
 LUCIDFLUX_FILE = "lucidflux.pth"
 PROMPT_EMBEDDINGS_FILE = "prompt_embeddings.pt"
+PID_PROMPT_EMBEDDING_FILE = "gemma_prompt_embedding.pt"
 ULTRAFLUX_REPO = "Owen777/UltraFlux-v1"
 SIGLIP_REPO = "google/siglip2-so400m-patch16-512"
+PID_REPO = "nvidia/PiD"
+PID_FLUX_2K_EXPERIMENT = "PiD_res2k_sr4x_official_flux_distill_4step"
+PID_FLUX_2KTO4K_EXPERIMENT = "PiD_res2kto4k_sr4x_official_flux_distill_4step"
+PID_CHECKPOINT_FILE = "model_ema_bf16.pth"
 MODEL_KEY = "flux-dev"
 
 
@@ -41,6 +46,9 @@ def plan(dest_root: Path) -> dict[str, Path]:
         "prompt_embeddings": dest_root / "lucidflux" / "prompt_embeddings.pt",
         "ultraflux": dest_root / "ultraflux",
         "siglip": dest_root / "siglip",
+        "pid_flux_2k": dest_root / "pid" / PID_FLUX_2K_EXPERIMENT / PID_CHECKPOINT_FILE,
+        "pid_flux_2kto4k": dest_root / "pid" / PID_FLUX_2KTO4K_EXPERIMENT / PID_CHECKPOINT_FILE,
+        "pid_prompt_embedding": dest_root / "pid" / PID_PROMPT_EMBEDDING_FILE,
     }
 
 
@@ -80,9 +88,15 @@ def write_manifest(manifest_path: Path, targets: dict[str, Path]) -> None:
         "lucidflux_file": LUCIDFLUX_FILE,
         "prompt_embeddings_repo": LUCIDFLUX_REPO,
         "prompt_embeddings_file": PROMPT_EMBEDDINGS_FILE,
+        "pid_prompt_embedding_repo": LUCIDFLUX_REPO,
+        "pid_prompt_embedding_file": PID_PROMPT_EMBEDDING_FILE,
         "ultraflux_repo": ULTRAFLUX_REPO,
         "ultraflux_subdir": "vae",
         "siglip_repo": SIGLIP_REPO,
+        "pid_repo": PID_REPO,
+        "pid_flux_2k_experiment": PID_FLUX_2K_EXPERIMENT,
+        "pid_flux_2kto4k_experiment": PID_FLUX_2KTO4K_EXPERIMENT,
+        "pid_checkpoint_file": PID_CHECKPOINT_FILE,
         "destinations": {key: str(value) for key, value in targets.items()},
     }
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
@@ -98,8 +112,11 @@ def dry_run(targets: dict[str, Path]) -> int:
                 f"DRY RUN: download SwinIR {SWINIR_REPO}:{SWINIR_FILE} -> {targets['swinir']}",
                 f"DRY RUN: download LucidFlux {LUCIDFLUX_REPO}:{LUCIDFLUX_FILE} -> {targets['lucidflux']}",
                 f"DRY RUN: download Prompt Embeddings {LUCIDFLUX_REPO}:{PROMPT_EMBEDDINGS_FILE} -> {targets['prompt_embeddings']}",
+                f"DRY RUN: download PiD Prompt Embedding {LUCIDFLUX_REPO}:{PID_PROMPT_EMBEDDING_FILE} -> {targets['pid_prompt_embedding']}",
                 f"DRY RUN: snapshot UltraFlux VAE {ULTRAFLUX_REPO}:vae/* -> {targets['ultraflux']}",
                 f"DRY RUN: snapshot SIGLIP {SIGLIP_REPO} -> {targets['siglip']}",
+                f"DRY RUN: download PiD FLUX 2k {PID_REPO}:checkpoints/{PID_FLUX_2K_EXPERIMENT}/{PID_CHECKPOINT_FILE} -> {targets['pid_flux_2k']}",
+                f"DRY RUN: download PiD FLUX 2kto4k {PID_REPO}:checkpoints/{PID_FLUX_2KTO4K_EXPERIMENT}/{PID_CHECKPOINT_FILE} -> {targets['pid_flux_2kto4k']}",
                 "DRY RUN: write env exports",
                 line1,
                 line2,
@@ -134,6 +151,12 @@ def main() -> int:
             targets["prompt_embeddings"],
             args.force,
         )
+    if args.force or not targets["pid_prompt_embedding"].exists():
+        copy_if_needed(
+            hf_hub_download(LUCIDFLUX_REPO, PID_PROMPT_EMBEDDING_FILE),
+            targets["pid_prompt_embedding"],
+            args.force,
+        )
     if args.force or not targets["ultraflux"].exists():
         snapshot_download(
             ULTRAFLUX_REPO,
@@ -147,7 +170,24 @@ def main() -> int:
             local_dir=str(targets["siglip"]),
             local_dir_use_symlinks=False,
         )
-
+    if args.force or not targets["pid_flux_2k"].exists():
+        copy_if_needed(
+            hf_hub_download(
+                PID_REPO,
+                f"checkpoints/{PID_FLUX_2K_EXPERIMENT}/{PID_CHECKPOINT_FILE}",
+            ),
+            targets["pid_flux_2k"],
+            args.force,
+        )
+    if args.force or not targets["pid_flux_2kto4k"].exists():
+        copy_if_needed(
+            hf_hub_download(
+                PID_REPO,
+                f"checkpoints/{PID_FLUX_2KTO4K_EXPERIMENT}/{PID_CHECKPOINT_FILE}",
+            ),
+            targets["pid_flux_2kto4k"],
+            args.force,
+        )
     write_env(targets["env"], targets)
     if args.print_env:
         sys.stdout.write("\n".join(env_lines(targets)) + "\n")

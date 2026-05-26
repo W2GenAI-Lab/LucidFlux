@@ -1,3 +1,4 @@
+# LucidFlux inference dependencies
 accelerate==0.30.1
 cv_bridge==1.13.0.post0
 diffusers==0.32.2
@@ -16,6 +17,22 @@ tqdm==4.67.1
 transformers==4.43.3
 einops==0.8.0
 
+# LucidFlux training dependencies
 deepspeed==0.18.8
 datasets==4.0.0
 omegaconf==2.3.0
+
+# PiD decoder dependencies
+hydra-core==1.3.2
+attrs
+attr
+loguru
+termcolor
+fvcore
+iopath
+pynvml
+wandb
+pandas
+imageio
+boto3>=1.34
+botocore>=1.34

@@ -1,7 +1,7 @@
 <div align="center">
 <h1>🎨 LucidFlux:<br/>Caption-Free Photo-Realistic Image Restoration via a Large-Scale Diffusion Transformer</h1>
 
-### [**🌐 Website**](https://w2genai-lab.github.io/LucidFlux/) | [**📘 Arxiv**](http://arxiv.org/abs/2509.22414) | [**📄 Technical Report**](Technical_Report.pdf) | [**🤗 Models**](https://huggingface.co/W2GenAI/LucidFlux) | [**🔧 Fal-AI Demo&API**](https://fal.ai/models/fal-ai/lucidflux/playground) 
+### [**🌐 Website**](https://w2genai-lab.github.io/LucidFlux/) | [**📘 Arxiv**](http://arxiv.org/abs/2509.22414) | [**🤗 Models**](https://huggingface.co/W2GenAI/LucidFlux) | [**🔧 Fal-AI Demo&API**](https://fal.ai/models/fal-ai/lucidflux/playground) 
 </div>
 
 ---
@@ -23,6 +23,8 @@
 
 ---
 ## 📰 News & Updates  
+
+**[2026.05.26]** - LucidFlux now integrates [PiD](https://github.com/nv-tlabs/PiD) to enable **4K image restoration**! 🚀
 
 **[2026.03.19]** - We released the training code for LucidFlux.
 
@@ -184,8 +186,6 @@ pip3 install torch torchvision torchaudio --index-url https://download.pytorch.o
 
 # Install remaining dependencies
 pip install -r requirements.txt
-pip install --upgrade timm
-
 ```
 
 ### Inference
@@ -214,7 +214,7 @@ source weights/env.sh
 Run inference (uses fixed relative paths):
 
 ```bash
-bash inference.sh
+bash scripts/inference.sh
 ```
 
 > ℹ️ LucidFlux builds on Flux-based generative priors. Restored images can differ from the low-quality input because the model removes degradations and hallucinates realistic details by design. Visual discrepancies are expected and indicate the generative nature of the method.
@@ -242,7 +242,7 @@ The LSDIR dataset can be downloaded from [LSDIR](https://huggingface.co/ofsoundo
 The training config is provided in `train_configs/train_LucidFlux.yaml`. The training data can be prepared in the same structure as the example under `assets/training_data`, where each sample is organized as paired images in `assets/training_data/lq` and `assets/training_data/gt`. In our current setup, the training run takes roughly 50 GB VRAM with `bs=2`, and about 43 GB with `bs=1`. Once the data is ready, you can start training with:
 
 ```bash
-bash train.sh
+bash scripts/train.sh
 ```
 
 ## 🚀 Updates
